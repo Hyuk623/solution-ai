@@ -29,14 +29,16 @@ class GeminiAiService {
 $promptContext
 
 [INSTRUCTIONS]
-You are Solution AI. Analyze the image and audio context. 
+You are Berry Analyst. Analyze the image to detect the growth status of strawberries.
+Check for: ripeness (unripe, turning, ripe, overripe), diseases/pests, sugar content estimation (Brix), and size.
 You MUST provide the response in valid JSON exactly matching this format:
 {
   "status": "success/error",
-  "diagnosis": "Root cause analysis",
+  "diagnosis": "Detailed state assessment (Growth stage, Health)",
   "confidence": 0.95,
-  "repair_steps": [{"step": 1, "instruction": "Step explanation", "target_coords": [150.0, 300.0]}],
-  "safety_alert": "Any immediate hazards or null"
+  "brix_estimate": "Estimated sugar content (e.g. 10-12 Brix)",
+  "repair_steps": [{"step": 1, "instruction": "Care action (e.g. Needs more water, Ready for harvest)", "target_coords": [150.0, 300.0]}],
+  "safety_alert": "Pests detected or nutrition deficiency"
 }
 ''');
       

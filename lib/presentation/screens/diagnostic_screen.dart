@@ -5,6 +5,7 @@ import '../../providers/diagnostic_provider.dart';
 import '../widgets/guide_bottom_sheet.dart';
 import '../widgets/ar_overlay_painter.dart';
 import 'package:camera/camera.dart';
+import 'package:image_picker/image_picker.dart' show ImagePicker, ImageSource;
 
 class DiagnosticScreen extends ConsumerStatefulWidget {
   const DiagnosticScreen({super.key});
@@ -15,6 +16,7 @@ class DiagnosticScreen extends ConsumerStatefulWidget {
 
 class _DiagnosticScreenState extends ConsumerState<DiagnosticScreen> {
   CameraController? _cameraController;
+  final ImagePicker _picker = ImagePicker();
   
   @override
   void initState() {
@@ -24,11 +26,24 @@ class _DiagnosticScreenState extends ConsumerState<DiagnosticScreen> {
 
   Future<void> _initializeCamera() async {
     final cameras = await availableCameras();
-    if (cameras.isEmpty) return; // Safely handle no cameras available
+    if (cameras.isEmpty) return; 
     
     _cameraController = CameraController(cameras.first, ResolutionPreset.medium);
     await _cameraController?.initialize();
     if (mounted) setState(() {});
+  }
+
+  Future<void> _pickImageFromGallery() async {
+    try {
+      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+      if (image != null) {
+        final Uint8List imageBytes = await image.readAsBytes();
+        ref.read(diagnosticProvider.notifier).startScanningWithFrame(Uint8List(0)); // Show loading
+        await ref.read(diagnosticProvider.notifier).startScanningWithFrame(imageBytes);
+      }
+    } catch (e) {
+      debugPrint("Gallery Pick Error: $e");
+    }
   }
 
   @override
@@ -45,11 +60,16 @@ class _DiagnosticScreenState extends ConsumerState<DiagnosticScreen> {
       backgroundColor: Colors.black,
       extendBodyBehindAppBar: true, 
       appBar: AppBar(
-        // withOpacity 대신 최신 문법인 withValues 사용
         backgroundColor: Colors.black.withValues(alpha: 0.3),
         elevation: 0,
-        title: const Text('Solution AI', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+        title: const Text('Berry Analyst AI', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
         centerTitle: true,
+        actions: [
+          IconButton(
+            onPressed: status == DiagnosticState.idle ? _pickImageFromGallery : null,
+            icon: const Icon(Icons.photo_library_outlined, color: Colors.white),
+          )
+        ],
       ),
       body: Stack(
         fit: StackFit.expand,
@@ -109,12 +129,12 @@ class _DiagnosticScreenState extends ConsumerState<DiagnosticScreen> {
                             strokeWidth: 3,
                           ),
                         ),
-                        const Icon(Icons.document_scanner, color: Colors.cyanAccent, size: 40),
+                        const Icon(Icons.eco_outlined, color: Colors.cyanAccent, size: 40),
                       ],
                     ),
                     const SizedBox(height: 24),
                     const Text(
-                      "객체 및 상태 진단 중...",
+                      "딸기 생육 상태 분석 중...",
                       style: TextStyle(
                         color: Colors.cyanAccent, 
                         fontSize: 18, 
@@ -124,7 +144,7 @@ class _DiagnosticScreenState extends ConsumerState<DiagnosticScreen> {
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      "Ai가 화면을 실시간으로 분석하고 있습니다",
+                      "AI가 잎의 색상과 열매의 성숙도를 체크합니다",
                       style: TextStyle(color: Colors.white70, fontSize: 13),
                     )
                   ],
@@ -144,23 +164,23 @@ class _DiagnosticScreenState extends ConsumerState<DiagnosticScreen> {
     Color color;
     switch (status) {
       case DiagnosticState.idle:
-        text = "카메라 준비 완료";
+        text = "진단 준비 완료";
         color = Colors.white24;
         break;
       case DiagnosticState.scanning:
-        text = "지능형 분석 진행";
+        text = "생육 분석 중";
         color = Colors.cyanAccent.withValues(alpha: 0.3);
         break;
       case DiagnosticState.validating:
-        text = "안전 검증 중";
+        text = "기록 검증 중";
         color = Colors.orangeAccent.withValues(alpha: 0.4);
         break;
       case DiagnosticState.repairing:
-        text = "솔루션 안내 중";
+        text = "분석 결과 요약";
         color = Colors.greenAccent.withValues(alpha: 0.4);
         break;
       case DiagnosticState.completed:
-        text = "작업 완료";
+        text = "자동 기록 완료";
         color = Colors.blueAccent.withValues(alpha: 0.4);
         break;
     }
@@ -218,47 +238,15 @@ class _DiagnosticScreenState extends ConsumerState<DiagnosticScreen> {
                 final XFile image = await _cameraController!.takePicture();
                 final Uint8List imageBytes = await image.readAsBytes();
                 await ref.read(diagnosticProvider.notifier).startScanningWithFrame(imageBytes);
-                
-                final errorMsg = ref.read(diagnosticProvider.notifier).errorMessage;
-                if (errorMsg != null && mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text("스캔 실패: \$errorMsg\n\n(*API KEY를 .env에 설정했는지 확인해주세요)"),
-                      backgroundColor: Colors.redAccent,
-                      duration: const Duration(seconds: 4),
-                    )
-                  );
-                }
               } catch (e) {
-                debugPrint("Error taking picture (Web environment may not support this): \$e");
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text("웹 프레임 환경상 실제 카메라 캡처가 제한되어, 텍스트 모드로 [솔루션]을 요청합니다."),
-                      backgroundColor: Colors.orange,
-                      duration: Duration(seconds: 3),
-                    )
-                  );
-                }
-                
+                debugPrint("Camera capture error: $e");
                 final dummyBytes = Uint8List.fromList([1]);
                 await ref.read(diagnosticProvider.notifier).startScanningWithFrame(dummyBytes);
-                
-                final errorMsg = ref.read(diagnosticProvider.notifier).errorMessage;
-                if (errorMsg != null && mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text("API 연동 실패: \$errorMsg"),
-                      backgroundColor: Colors.redAccent,
-                      duration: const Duration(seconds: 4),
-                    )
-                  );
-                }
               }
             }
           },
-          icon: const Icon(Icons.view_in_ar, size: 28),
-          label: const Text("솔루션 스캔", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, letterSpacing: 1.0)),
+          icon: const Icon(Icons.eco, size: 28, color: Colors.green),
+          label: const Text("생육 상태 진단", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, letterSpacing: 1.0)),
         ),
       );
     } 

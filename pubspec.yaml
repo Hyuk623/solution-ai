@@ -17,6 +17,7 @@ dependencies:
   flutter_dotenv: ^5.1.0
   # Camera & UI
   camera: ^0.10.5+9
+  image_picker: ^1.1.2
   # Firebase Services (To be connected later)
   # firebase_core: ^2.27.0
   # cloud_firestore: ^4.15.8
