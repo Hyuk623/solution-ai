@@ -38,7 +38,7 @@ class _DiagnosticScreenState extends ConsumerState<DiagnosticScreen> {
       final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
       if (image != null) {
         final Uint8List imageBytes = await image.readAsBytes();
-        ref.read(diagnosticProvider.notifier).startScanningWithFrame(Uint8List(0)); // Show loading
+        ref.read(diagnosticProvider.notifier).startScanningWithFrame(Uint8List(0)); 
         await ref.read(diagnosticProvider.notifier).startScanningWithFrame(imageBytes);
       }
     } catch (e) {
