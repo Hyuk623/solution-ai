@@ -60,7 +60,7 @@ class _DiagnosticScreenState extends ConsumerState<DiagnosticScreen> {
       backgroundColor: Colors.black,
       extendBodyBehindAppBar: true, 
       appBar: AppBar(
-        backgroundColor: Colors.black.withValues(alpha: 0.3),
+        backgroundColor: Colors.black.withOpacity(0.3),
         elevation: 0,
         title: const Text('Berry Analyst AI', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
         centerTitle: true,
@@ -105,7 +105,7 @@ class _DiagnosticScreenState extends ConsumerState<DiagnosticScreen> {
           
           if (status == DiagnosticState.scanning)
             Container(
-              color: Colors.black.withValues(alpha: 0.7),
+              color: Colors.black.withOpacity(0.7),
               child: Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -117,7 +117,7 @@ class _DiagnosticScreenState extends ConsumerState<DiagnosticScreen> {
                           width: 100,
                           height: 100,
                           child: CircularProgressIndicator(
-                            color: Colors.cyanAccent.withValues(alpha: 0.4),
+                            color: Colors.cyanAccent.withOpacity(0.4),
                             strokeWidth: 2,
                           ),
                         ),
@@ -169,19 +169,19 @@ class _DiagnosticScreenState extends ConsumerState<DiagnosticScreen> {
         break;
       case DiagnosticState.scanning:
         text = "생육 분석 중";
-        color = Colors.cyanAccent.withValues(alpha: 0.3);
+        color = Colors.cyanAccent.withOpacity(0.3);
         break;
       case DiagnosticState.validating:
         text = "기록 검증 중";
-        color = Colors.orangeAccent.withValues(alpha: 0.4);
+        color = Colors.orangeAccent.withOpacity(0.4);
         break;
       case DiagnosticState.repairing:
         text = "분석 결과 요약";
-        color = Colors.greenAccent.withValues(alpha: 0.4);
+        color = Colors.greenAccent.withOpacity(0.4);
         break;
       case DiagnosticState.completed:
         text = "자동 기록 완료";
-        color = Colors.blueAccent.withValues(alpha: 0.4);
+        color = Colors.blueAccent.withOpacity(0.4);
         break;
     }
 
@@ -190,10 +190,10 @@ class _DiagnosticScreenState extends ConsumerState<DiagnosticScreen> {
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1),
+        border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
+            color: Colors.black.withOpacity(0.2),
             blurRadius: 10,
             spreadRadius: 2,
           )

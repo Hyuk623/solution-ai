@@ -18,12 +18,12 @@ class GuideBottomSheet extends ConsumerWidget {
     return Container(
       margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.95),
+        color: Colors.white.withOpacity(0.95),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: Colors.white, width: 2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15), 
+            color: Colors.black.withOpacity(0.15), 
             blurRadius: 20, 
             spreadRadius: 5,
             offset: const Offset(0, 10),
@@ -47,9 +47,9 @@ class GuideBottomSheet extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.redAccent.withValues(alpha: 0.1),
+                  color: Colors.redAccent.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.redAccent.withValues(alpha: 0.5))
+                  border: Border.all(color: Colors.redAccent.withOpacity(0.5))
                 ),
                 child: Text(brix, style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 13)),
               )
@@ -69,9 +69,9 @@ class GuideBottomSheet extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.green.withValues(alpha: 0.1),
+              color: Colors.green.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.green.withValues(alpha: 0.5)),
+              border: Border.all(color: Colors.green.withOpacity(0.5)),
             ),
             child: Row(
               children: [
@@ -91,7 +91,7 @@ class GuideBottomSheet extends ConsumerWidget {
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: Colors.grey.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+                decoration: BoxDecoration(color: Colors.grey.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
                 child: const Icon(Icons.wb_sunny_outlined, color: Colors.orange),
               ),
               const SizedBox(width: 12),
