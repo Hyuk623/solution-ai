@@ -15,10 +15,9 @@ dependencies:
   google_generative_ai: ^0.4.6
   # Config / API Keys
   flutter_dotenv: ^5.1.0
-  # Camera & UI
-  camera: ^0.10.5+9
+  # UI & Image Selection
   image_picker: ^1.1.2
-  # Firebase Services (To be connected later)
+  # Network (for custom API calls if needed)
   # firebase_core: ^2.27.0
   # cloud_firestore: ^4.15.8
   # firebase_storage: ^11.6.4
