@@ -5,38 +5,34 @@ import 'presentation/screens/diagnostic_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Load environment variables for API keys
-  // try-catch in case .env is missing during early dev
   try {
     await dotenv.load(fileName: ".env");
   } catch (e) {
     debugPrint("Could not load .env file: $e");
   }
-  
-  // Firebase initialization would go here later
-  // await Firebase.initializeApp();
-
   runApp(
     const ProviderScope(
-      child: SoluAiApp(),
+      child: BerryAnalystApp(),
     ),
   );
 }
 
-class SoluAiApp extends StatelessWidget {
-  const SoluAiApp({super.key});
+class BerryAnalystApp extends StatelessWidget {
+  const BerryAnalystApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Solution AI',
+      title: 'Berry Analyst AI',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF16A34A),
+          brightness: Brightness.dark,
+        ),
         useMaterial3: true,
       ),
       home: const DiagnosticScreen(),
-      debugShowCheckedModeBanner: false,
     );
   }
 }

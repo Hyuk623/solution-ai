@@ -1,73 +1,70 @@
 import 'dart:typed_data';
-import 'package:flutter/foundation.dart'; // added for debugPrint
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/gemini_ai_service.dart';
 
-enum DiagnosticState {
-  idle,       // Initial state, ready to scan
-  scanning,   // Actively analyzing camera feed
-  validating, // Checking safety and completion (Step-validation)
-  repairing,  // Showing AR guide and steps
-  completed   // Diagnosis and repair finished successfully
+enum AnalysisState { idle, loading, done, error }
+
+class AnalysisResult {
+  final String diagnosis;
+  final String ripeness;
+  final String brixEstimate;
+  final double confidence;
+  final String careInstruction;
+  final String? alert;
+
+  AnalysisResult({
+    required this.diagnosis,
+    required this.ripeness,
+    required this.brixEstimate,
+    required this.confidence,
+    required this.careInstruction,
+    this.alert,
+  });
+
+  factory AnalysisResult.fromJson(Map<String, dynamic> json) {
+    return AnalysisResult(
+      diagnosis: json['diagnosis'] as String? ?? '-',
+      ripeness: json['ripeness'] as String? ?? '-',
+      brixEstimate: json['brix_estimate'] as String? ?? '-',
+      confidence: (json['confidence'] as num?)?.toDouble() ?? 0.0,
+      careInstruction: json['care_instruction'] as String? ?? '-',
+      alert: json['alert'] as String?,
+    );
+  }
 }
 
-class DiagnosticNotifier extends StateNotifier<DiagnosticState> {
-  DiagnosticNotifier() : super(DiagnosticState.idle);
+class DiagnosticNotifier extends StateNotifier<AnalysisState> {
+  DiagnosticNotifier() : super(AnalysisState.idle);
 
-  GeminiAiService get _aiService => GeminiAiService();
-
+  AnalysisResult? result;
   String? errorMessage;
-  Map<String, dynamic>? analysisResult;
 
-  Future<void> startScanningWithFrame(Uint8List imageBytes) async {
-    if (imageBytes.isEmpty) {
-      state = DiagnosticState.scanning;
-      errorMessage = null;
-      return;
-    }
-    
+  Future<void> analyze(Uint8List imageBytes) async {
+    state = AnalysisState.loading;
+    errorMessage = null;
+    result = null;
+
     try {
-      final prompt = imageBytes.length > 10
-        ? "Analyze the strawberries in this image. Assess their ripeness stage (Green, Pink, Red), estimate Brix, and identify any issues like botrytis or aphids. Suggest care actions."
-        : "Assume there is a cluster of strawberries. Some are turning red. Estimate Brix and suggest watering. Mock coords around [200.0, 400.0]";
-
-      final resultJson = await _aiService.analyzeFrame(
-        imageBytes: imageBytes, 
-        promptContext: prompt
-      );
-      
-      debugPrint("AI BERRY ANALYSIS SUCCESS: \$resultJson");
-      analysisResult = resultJson;
-      state = DiagnosticState.repairing;
-      
+      final service = GeminiAiService();
+      final json = await service.analyzeStrawberry(imageBytes: imageBytes);
+      result = AnalysisResult.fromJson(json);
+      state = AnalysisState.done;
     } catch (e) {
-      debugPrint("SCAN FAILED: \$e");
-      
-      if (e.toString().contains('Failed host lookup') || e.toString().contains('SocketException')) {
-        debugPrint("Network fallback: Generating Mock Berry Data");
-        analysisResult = {
-          "diagnosis": "중간 성숙 단계 (Pink Stage)",
-          "brix_estimate": "8.5 Brix",
-          "repair_steps": [{"instruction": "일조량 2시간 추가 확보 필요", "target_coords": [200.0, 450.0]}]
-        };
-        Future.delayed(const Duration(seconds: 1), () {
-          errorMessage = null;
-          state = DiagnosticState.repairing;
-        });
-        return;
-      }
-
+      debugPrint('Analysis error: $e');
       errorMessage = e.toString();
-      state = DiagnosticState.idle;
+      state = AnalysisState.error;
     }
   }
 
-  void stopProcess() { state = DiagnosticState.idle; analysisResult = null; }
-  void onDiagnosisReceived() { state = DiagnosticState.repairing; }
-  void requestValidation() { state = DiagnosticState.validating; }
-  void completeRepair() { state = DiagnosticState.completed; }
+  void reset() {
+    result = null;
+    errorMessage = null;
+    state = AnalysisState.idle;
+  }
 }
 
-final diagnosticProvider = StateNotifierProvider<DiagnosticNotifier, DiagnosticState>((ref) {
-  return DiagnosticNotifier();
-});
+final diagnosticProvider =
+    StateNotifierProvider<DiagnosticNotifier, AnalysisState>(
+  (ref) => DiagnosticNotifier(),
+);
