@@ -9,19 +9,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  # State Management
   flutter_riverpod: ^2.5.1
-  # AI Integration
   google_generative_ai: ^0.4.6
-  # Config / API Keys
   flutter_dotenv: ^5.1.0
-  # UI & Image Selection
   image_picker: ^1.1.2
-  # Network (for custom API calls if needed)
-  # firebase_core: ^2.27.0
-  # cloud_firestore: ^4.15.8
-  # firebase_storage: ^11.6.4
-  # Network (for custom API calls if needed)
   http: ^1.2.1
 
 dev_dependencies:

@@ -57,7 +57,6 @@ class _DiagnosticScreenState extends ConsumerState<DiagnosticScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Background Decor
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
@@ -74,49 +73,48 @@ class _DiagnosticScreenState extends ConsumerState<DiagnosticScreen> {
           ),
           
           Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                if (status == DiagnosticState.idle) ...[
-                  const Icon(Icons.eco_rounded, size: 80, color: Colors.greenAccent),
-                  const SizedBox(height: 24),
-                  const Text(
-                    "딸기를 진찰할 준비가 되었습니다",
-                    style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    "사진을 찍거나 갤러리에서 선택해 주세요",
-                    style: TextStyle(color: Colors.white60, fontSize: 14),
-                  ),
-                  const SizedBox(height: 40),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _buildActionCard(
-                        icon: Icons.camera_alt_outlined,
-                        label: "사진 촬영",
-                        onTap: _takePhoto,
-                      ),
-                      const SizedBox(width: 20),
-                      _buildActionCard(
-                        icon: Icons.photo_library_outlined,
-                        label: "갤러리 업로드",
-                        onTap: _pickImageFromGallery,
-                      ),
-                    ],
-                  ),
-                ] else if (status == DiagnosticState.scanning) ...[
-                  const CircularProgressIndicator(color: Colors.greenAccent),
-                  const SizedBox(height: 24),
-                  const Text(
-                    "AI가 딸기를 분석 중입니다...",
-                    style: TextStyle(color: Colors.greenAccent, fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                ] else ...[
-                  const GuideBottomSheet(),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (status == DiagnosticState.idle) ...[
+                    const Icon(Icons.eco_rounded, size: 80, color: Colors.greenAccent),
+                    const SizedBox(height: 24),
+                    const Text(
+                      "딸기를 진단할 준비가 완료되었습니다",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 40),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _buildActionCard(
+                          icon: Icons.camera_alt_outlined,
+                          label: "사진 촬영",
+                          onTap: _takePhoto,
+                        ),
+                        const SizedBox(width: 20),
+                        _buildActionCard(
+                          icon: Icons.photo_library_outlined,
+                          label: "갤러리 업로드",
+                          onTap: _pickImageFromGallery,
+                        ),
+                      ],
+                    ),
+                  ] else if (status == DiagnosticState.scanning) ...[
+                    const CircularProgressIndicator(color: Colors.greenAccent),
+                    const SizedBox(height: 24),
+                    const Text(
+                      "AI가 분석 중입니다...",
+                      style: TextStyle(color: Colors.greenAccent, fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ] else ...[
+                    const GuideBottomSheet(),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ],
