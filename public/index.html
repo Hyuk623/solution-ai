@@ -3,446 +3,489 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Berry Analyst AI - 딸기 생육 분석</title>
+  <title>Berry Analyst AI | Multimodal AI Assistant</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet" />
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg-dark: #0f172a;
+      --accent: #10b981;
+      --accent-glow: rgba(16, 185, 129, 0.4);
+      --glass: rgba(255, 255, 255, 0.03);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --glass-hover: rgba(255, 255, 255, 0.06);
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+    }
 
+    /* ── Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: 'Noto Sans KR', sans-serif;
-      background: #0b1120;
-      color: #f1f5f9;
+      font-family: 'Outfit', 'Noto Sans KR', sans-serif;
+      background: var(--bg-dark);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.05) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.05) 0px, transparent 50%);
+      color: var(--text);
       min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
     }
 
     /* ── Header ── */
     header {
+      backdrop-filter: blur(12px);
+      background: rgba(15, 23, 42, 0.8);
+      border-bottom: 1px solid var(--glass-border);
+      padding: 1.5rem 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
       display: flex;
-      align-items: center;
       justify-content: center;
-      gap: 10px;
-      padding: 20px 24px;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
+      align-items: center;
+      gap: 0.75rem;
     }
-    header .logo { font-size: 22px; font-weight: 700; letter-spacing: 0.5px; }
-    header .logo span { color: #4ade80; }
+    header .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    header .logo span {
+      background: linear-gradient(135deg, #10b981, #34d399);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
 
-    /* ── API Key bar ── */
-    .api-bar {
-      background: rgba(255,255,255,0.04);
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-      padding: 10px 24px;
+    /* ── API Configuration ── */
+    .config-tray {
+      max-width: 800px;
+      margin: 1.5rem auto 0;
+      padding: 0 1.5rem;
+      width: 100%;
+    }
+    .config-card {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 1rem;
+      padding: 1rem 1.25rem;
       display: flex;
       align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
+      gap: 1rem;
     }
-    .api-bar label { font-size: 12px; color: #94a3b8; white-space: nowrap; }
-    .api-bar input {
-      flex: 1;
-      min-width: 200px;
-      background: rgba(255,255,255,0.07);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 8px;
-      padding: 7px 12px;
-      color: #f1f5f9;
-      font-size: 13px;
-      outline: none;
-    }
-    .api-bar input:focus { border-color: #4ade80; }
-    .api-bar button {
-      padding: 7px 18px;
-      background: #16a34a;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      font-size: 13px;
-      cursor: pointer;
+    .config-card label {
+      font-size: 0.75rem;
       font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
       white-space: nowrap;
     }
-    .api-bar button:hover { background: #15803d; }
-
-    /* ── Main ── */
-    main { max-width: 760px; margin: 0 auto; padding: 40px 20px; }
-
-    /* ── Upload zone ── */
-    .upload-zone {
-      border: 2px dashed rgba(74,222,128,0.3);
-      border-radius: 20px;
-      background: rgba(74,222,128,0.03);
-      padding: 48px 24px;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.2s;
-      position: relative;
+    .config-card input {
+      flex: 1;
+      background: rgba(0,0,0,0.2);
+      border: 1px solid var(--glass-border);
+      border-radius: 0.75rem;
+      padding: 0.6rem 1rem;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
     }
-    .upload-zone:hover, .upload-zone.drag-over {
-      border-color: #4ade80;
-      background: rgba(74,222,128,0.07);
-    }
-    .upload-zone input[type="file"] {
-      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
-    }
-    .upload-icon { font-size: 56px; margin-bottom: 16px; }
-    .upload-zone h2 { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
-    .upload-zone p { color: #64748b; font-size: 14px; }
-    .upload-zone .hint { margin-top: 20px; font-size: 12px; color: #475569; }
-
-    /* ── Preview ── */
-    #preview-area { margin-top: 24px; display: none; }
-    #preview-area img {
-      width: 100%;
-      max-height: 340px;
-      object-fit: cover;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,0.08);
-    }
-    #analyze-btn {
-      margin-top: 16px;
-      width: 100%;
-      padding: 16px;
-      background: linear-gradient(135deg, #16a34a, #15803d);
-      color: #fff;
+    .config-card input:focus { border-color: var(--accent); }
+    .config-card button {
+      background: #10b981;
+      color: white;
       border: none;
-      border-radius: 14px;
-      font-size: 17px;
-      font-weight: 700;
+      border-radius: 0.75rem;
+      padding: 0.6rem 1.5rem;
+      font-weight: 600;
+      font-size: 0.9rem;
       cursor: pointer;
-      letter-spacing: 0.3px;
-      transition: opacity 0.2s;
+      transition: transform 0.2s, box-shadow 0.2s;
     }
-    #analyze-btn:hover { opacity: 0.88; }
-    #analyze-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .config-card button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px var(--accent-glow);
+    }
+
+    /* ── Main Area ── */
+    main {
+      flex: 1;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem;
+      width: 100%;
+    }
+
+    /* ── Upload Area ── */
+    .hero-section {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .hero-section h1 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      margin-bottom: 0.75rem;
+      letter-spacing: -0.04em;
+    }
+    .hero-section p {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      max-width: 500px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    .drop-zone {
+      position: relative;
+      margin-top: 2.5rem;
+      background: var(--glass);
+      border: 2px dashed var(--glass-border);
+      border-radius: 2rem;
+      padding: 4rem 2rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+    }
+    .drop-zone:hover {
+      border-color: var(--accent);
+      background: var(--glass-hover);
+      transform: scale(1.01);
+    }
+    .drop-zone.drag-over {
+      border-color: var(--accent);
+      background: var(--accent-glow);
+    }
+    .drop-zone input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer;
+    }
+    .drop-zone .icon-container {
+      font-size: 4rem;
+      margin-bottom: 1.5rem;
+      filter: drop-shadow(0 0 10px var(--accent-glow));
+    }
+    .drop-zone h3 { font-size: 1.25rem; margin-bottom: 0.5rem; }
+    .drop-zone p { color: var(--text-muted); font-size: 0.9rem; }
 
     /* ── Loading ── */
-    #loading { display: none; text-align: center; padding: 48px 0; }
-    .spinner {
-      width: 52px; height: 52px;
-      border: 4px solid rgba(74,222,128,0.2);
-      border-top-color: #4ade80;
+    #loading { display: none; margin: 3rem 0; text-align: center; }
+    .loader {
+      width: 48px; height: 48px;
+      border: 4px solid var(--glass-border);
+      border-left-color: var(--accent);
       border-radius: 50%;
-      animation: spin 0.9s linear infinite;
-      margin: 0 auto 20px;
+      display: inline-block;
+      animation: rotation 1s linear infinite;
+      margin-bottom: 1rem;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes rotation { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-    /* ── Result ── */
-    #result-area { display: none; margin-top: 32px; }
+    /* ── Result View ── */
+    #result-view { display: none; animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-    .result-header {
+    .result-img-container {
+      width: 100%;
+      aspect-ratio: 16/9;
+      object-fit: cover;
+      border-radius: 1.5rem;
+      overflow: hidden;
+      margin-bottom: 2rem;
+      border: 1px solid var(--glass-border);
+    }
+    .result-img-container img { width: 100%; height: 100%; object-fit: cover; }
+
+    .action-row {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      margin-bottom: 20px;
+      align-items: center;
+      margin-bottom: 1.5rem;
     }
-    .result-header h2 { font-size: 20px; font-weight: 700; }
-    #reset-btn {
-      padding: 8px 18px;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.12);
-      color: #94a3b8;
-      border-radius: 10px;
-      font-size: 13px;
+    #retry-btn {
+      background: var(--glass);
+      color: var(--text-muted);
+      border: 1px solid var(--glass-border);
+      padding: 0.6rem 1.2rem;
+      border-radius: 0.75rem;
       cursor: pointer;
-      transition: background 0.2s;
+      font-weight: 600;
+      transition: all 0.2s;
     }
-    #reset-btn:hover { background: rgba(255,255,255,0.14); }
+    #retry-btn:hover { background: var(--glass-hover); color: var(--text); }
 
-    .stats-grid {
+    .stats-container {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin-bottom: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
     }
-    .stat-card {
-      background: #1e293b;
-      border-radius: 14px;
-      padding: 18px 12px;
+    .stat-pill {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 1.25rem;
+      padding: 1.25rem;
       text-align: center;
     }
-    .stat-card .icon { font-size: 26px; margin-bottom: 8px; }
-    .stat-card .value { font-size: 16px; font-weight: 700; color: #f1f5f9; }
-    .stat-card .label { font-size: 11px; color: #64748b; margin-top: 4px; }
+    .stat-pill .icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
+    .stat-pill .val { font-size: 1.1rem; font-weight: 700; block-size: 1.5rem; }
+    .stat-pill .label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.25rem; }
 
-    .info-card {
-      background: #1e293b;
-      border-radius: 14px;
-      padding: 20px;
-      margin-bottom: 12px;
-      border-left: 3px solid #4ade80;
+    .insight-card {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 1.5rem;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
     }
-    .info-card.warn { border-left-color: #f87171; }
-    .info-card.tip  { border-left-color: #fb923c; }
-    .info-card .card-title {
-      font-size: 12px;
-      font-weight: 600;
-      color: #4ade80;
+    .insight-card .tag {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 800;
       text-transform: uppercase;
-      letter-spacing: 0.8px;
-      margin-bottom: 8px;
+      letter-spacing: 0.1em;
+      padding: 0.25rem 0.6rem;
+      border-radius: 0.5rem;
+      margin-bottom: 0.75rem;
     }
-    .info-card.warn .card-title { color: #f87171; }
-    .info-card.tip  .card-title { color: #fb923c; }
-    .info-card .card-body { font-size: 15px; line-height: 1.6; color: #cbd5e1; }
+    .insight-card .body { font-size: 1rem; line-height: 1.6; color: var(--text); }
 
-    /* ── Error ── */
-    .error-box {
-      background: rgba(239,68,68,0.1);
-      border: 1px solid rgba(239,68,68,0.3);
-      border-radius: 12px;
-      padding: 16px 20px;
-      color: #fca5a5;
-      font-size: 14px;
-      margin-top: 16px;
-      display: none;
-    }
+    .tag.diagnosis { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+    .tag.care { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+    .tag.alert { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
 
-    @media (max-width: 480px) {
-      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    /* ── Utilities ── */
+    #preview-area { display: none; }
+    .analyze-btn {
+      width: 100%;
+      padding: 1.2rem;
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      border: none;
+      border-radius: 1.25rem;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 1.5rem;
+      transition: transform 0.2s, box-shadow 0.2s;
     }
+    .analyze-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px var(--accent-glow); }
   </style>
 </head>
 <body>
 
 <header>
-  <span style="font-size:28px;">🍓</span>
-  <div class="logo">Berry <span>Analyst</span> AI</div>
+  <span style="font-size:1.8rem;">🍓</span>
+  <div class="logo">Berry<span>Analyst</span> AI</div>
 </header>
 
-<div class="api-bar">
-  <label>Gemini API Key</label>
-  <input id="api-key-input" type="password" placeholder="AIza..." />
-  <button onclick="saveKey()">저장</button>
+<div class="config-tray">
+  <div class="config-card">
+    <label>Gemini API Key</label>
+    <input id="key-input" type="password" placeholder="AIzaSy..." />
+    <button onclick="saveKey()">Save Config</button>
+  </div>
 </div>
 
 <main>
-  <!-- Upload -->
-  <div class="upload-zone" id="upload-zone">
-    <input type="file" id="file-input" accept="image/*" onchange="handleFile(event)" />
-    <div class="upload-icon">📷</div>
-    <h2>딸기 사진을 업로드하세요</h2>
-    <p>클릭하거나 사진을 끌어다 놓으세요</p>
-    <p class="hint">갤러리 선택 또는 카메라 촬영 모두 가능합니다</p>
-  </div>
-
-  <!-- Preview -->
-  <div id="preview-area">
-    <img id="preview-img" src="" alt="업로드된 이미지" />
-    <button id="analyze-btn" onclick="analyze()">AI로 생육 분석하기</button>
-  </div>
-
-  <!-- Loading -->
-  <div id="loading">
-    <div class="spinner"></div>
-    <p>AI가 딸기를 분석 중입니다...</p>
-  </div>
-
-  <!-- Error -->
-  <div class="error-box" id="error-box"></div>
-
-  <!-- Result -->
-  <div id="result-area">
-    <div class="result-header">
-      <h2>분석 결과</h2>
-      <button id="reset-btn" onclick="reset()">다시 분석</button>
+  <!-- UI: Idle -->
+  <section id="idle-view">
+    <div class="hero-section">
+      <h1>The Future of <span>Berry Care</span>.</h1>
+      <p>Precision AI analysis for your crops. Instant growth diagnosis, Brix estimation, and health tracking in one click.</p>
     </div>
 
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="icon">🌱</div>
-        <div class="value" id="r-ripeness">-</div>
-        <div class="label">성숙도</div>
+    <div class="drop-zone" id="drop-zone">
+      <input type="file" id="file-input" accept="image/*" onchange="handleFile(event)" />
+      <div class="icon-container">🌿</div>
+      <h3>Capture or Upload</h3>
+      <p>Drag and drop or click to analyze your crop</p>
+    </div>
+  </section>
+
+  <!-- UI: Preview -->
+  <section id="preview-area">
+    <div class="result-img-container">
+      <img id="preview-img" src="" alt="Crop Input" />
+    </div>
+    <button class="analyze-btn" id="analyze-btn" onclick="analyze()">Run AI Diagnosis</button>
+  </section>
+
+  <!-- UI: Loading -->
+  <section id="loading">
+    <span class="loader"></span>
+    <p style="color:var(--text-muted); font-weight:500;">AI Engine Processing Multimodal Data...</p>
+  </section>
+
+  <!-- UI: Result -->
+  <section id="result-view">
+    <div class="action-row">
+      <h2>Diagnosis Report</h2>
+      <button id="retry-btn" onclick="reset()">New Analysis</button>
+    </div>
+    
+    <div class="result-img-container" style="aspect-ratio: 21/9;">
+      <img id="final-img" src="" />
+    </div>
+
+    <div class="stats-container">
+      <div class="stat-pill">
+        <div class="icon">📈</div>
+        <div class="val" id="res-ripeness">-</div>
+        <div class="label">Ripeness</div>
       </div>
-      <div class="stat-card">
-        <div class="icon">💧</div>
-        <div class="value" id="r-brix">-</div>
-        <div class="label">예측 당도</div>
+      <div class="stat-pill">
+        <div class="icon">✨</div>
+        <div class="val" id="res-brix">-</div>
+        <div class="label">Brix Est.</div>
       </div>
-      <div class="stat-card">
-        <div class="icon">✅</div>
-        <div class="value" id="r-confidence">-</div>
-        <div class="label">신뢰도</div>
+      <div class="stat-pill">
+        <div class="icon">🔮</div>
+        <div class="val" id="res-conf">-</div>
+        <div class="label">Confidence</div>
       </div>
     </div>
 
-    <div class="info-card">
-      <div class="card-title">생육 상태 진단</div>
-      <div class="card-body" id="r-diagnosis">-</div>
+    <div class="insight-card">
+      <span class="tag diagnosis">Diagnosis</span>
+      <div class="body" id="res-diagnosis">-</div>
     </div>
-
-    <div class="info-card tip">
-      <div class="card-title">권장 조치</div>
-      <div class="card-body" id="r-care">-</div>
+    <div class="insight-card">
+      <span class="tag care">Smart Instruction</span>
+      <div class="body" id="res-care">-</div>
     </div>
-
-    <div class="info-card warn" id="alert-card" style="display:none;">
-      <div class="card-title">주의</div>
-      <div class="card-body" id="r-alert">-</div>
+    <div class="insight-card" id="alert-card" style="display:none;">
+      <span class="tag alert">Security Warning</span>
+      <div class="body" id="res-alert">-</div>
     </div>
-  </div>
+  </section>
 </main>
 
 <script>
-  // ── API Key ──────────────────────────────────────────
-  const KEY_STORAGE = 'berry_gemini_key';
+  const STORAGE_KEY = 'berry_analyst_v2_key';
 
-  window.addEventListener('DOMContentLoaded', () => {
-    const saved = localStorage.getItem(KEY_STORAGE);
-    if (saved) document.getElementById('api-key-input').value = saved;
-  });
+  window.onload = () => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if(saved) document.getElementById('key-input').value = saved;
+  };
 
   function saveKey() {
-    const key = document.getElementById('api-key-input').value.trim();
-    if (!key) return alert('API 키를 입력해주세요.');
-    localStorage.setItem(KEY_STORAGE, key);
-    alert('API 키가 저장되었습니다.');
+    const val = document.getElementById('key-input').value.trim();
+    if(!val) return alert('Input valid key.');
+    localStorage.setItem(STORAGE_KEY, val);
+    alert('Config secured.');
   }
 
   function getKey() {
-    return localStorage.getItem(KEY_STORAGE) || document.getElementById('api-key-input').value.trim();
+    return localStorage.getItem(STORAGE_KEY) || document.getElementById('key-input').value;
   }
 
-  // ── File Handling ─────────────────────────────────────
-  let currentBase64 = null;
-  let currentMime   = 'image/jpeg';
+  let currentB64 = null;
+  let currentMime = 'image/jpeg';
 
-  function handleFile(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    loadFile(file);
+  function handleFile(e) {
+    const file = e.target.files[0];
+    if(file) processFile(file);
   }
 
-  function loadFile(file) {
+  function processFile(file) {
     currentMime = file.type || 'image/jpeg';
     const reader = new FileReader();
-    reader.onload = (e) => {
-      // Preview
-      document.getElementById('preview-img').src = e.target.result;
+    reader.onload = (ev) => {
+      document.getElementById('preview-img').src = ev.target.result;
+      document.getElementById('final-img').src = ev.target.result;
+      document.getElementById('idle-view').style.display = 'none';
       document.getElementById('preview-area').style.display = 'block';
-      document.getElementById('result-area').style.display = 'none';
-      document.getElementById('error-box').style.display   = 'none';
-
-      // Base64 (strip header)
-      currentBase64 = e.target.result.split(',')[1];
+      currentB64 = ev.target.result.split(',')[1];
     };
     reader.readAsDataURL(file);
   }
 
-  // drag & drop
-  const zone = document.getElementById('upload-zone');
-  zone.addEventListener('dragover',  (e) => { e.preventDefault(); zone.classList.add('drag-over'); });
-  zone.addEventListener('dragleave', ()  => zone.classList.remove('drag-over'));
-  zone.addEventListener('drop',      (e) => {
+  const dz = document.getElementById('drop-zone');
+  dz.ondragover = (e) => { e.preventDefault(); dz.classList.add('drag-over'); };
+  dz.ondragleave = () => dz.classList.remove('drag-over');
+  dz.ondrop = (e) => {
     e.preventDefault();
-    zone.classList.remove('drag-over');
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith('image/')) loadFile(file);
-  });
+    dz.classList.remove('drag-over');
+    const f = e.dataTransfer.files[0];
+    if(f && f.type.startsWith('image/')) processFile(f);
+  };
 
-  // ── Analyze ───────────────────────────────────────────
   async function analyze() {
-    const apiKey = getKey();
-    if (!apiKey) { showError('먼저 Gemini API 키를 입력하고 저장해주세요.'); return; }
-    if (!currentBase64) { showError('이미지를 먼저 업로드해주세요.'); return; }
+    const key = getKey();
+    if(!key) return alert('Store API Key first.');
 
     setLoading(true);
-    hideError();
 
-    const prompt = `You are an expert strawberry analyst.
-Analyze this strawberry image carefully and return ONLY a valid JSON object (no markdown, no explanation) in exactly this format:
+    const prompt = `Act as an expert agronomist.
+Analyze the image of berries and crops.
+Output strictly JSON only (no markdown, no prefix):
 {
-  "diagnosis": "Brief assessment in Korean (1-2 sentences)",
-  "ripeness": "미성숙/성숙중/완숙/과숙 (one of these)",
-  "brix_estimate": "e.g. 10-12 Brix",
-  "confidence": 0.90,
-  "care_instruction": "Main recommended action in Korean",
-  "alert": "Disease/pest info in Korean, or null"
+  "diagnosis": "Summary in Korean",
+  "ripeness": "Growth Stage (KR)",
+  "brix": "Est Brix value",
+  "confidence": "Percent e.g. 95%",
+  "instruction": "Agronomy action in Korean",
+  "warning": "Health issues (KR) or null"
 }`;
 
-    const body = {
+    const payload = {
       contents: [{
         parts: [
-          { inline_data: { mime_type: currentMime, data: currentBase64 } },
+          { inline_data: { mime_type: currentMime, data: currentB64 } },
           { text: prompt }
         ]
       }]
     };
 
     try {
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body)
-        }
-      );
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error?.message || `HTTP ${res.status}`);
-      }
-
-      const data = await res.json();
-      let text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-
-      // strip possible markdown fences
-      text = text.replace(/```json/g, '').replace(/```/g, '').trim();
-
-      const result = JSON.parse(text);
-      showResult(result);
-    } catch (e) {
-      showError('분석 실패: ' + e.message);
+      const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${key}`, {
+        method: 'POST', body: JSON.stringify(payload)
+      });
+      const data = await resp.json();
+      let raw = data.candidates[0].content.parts[0].text;
+      raw = raw.replace(/\`\`\`json/g, '').replace(/\`\`\`/g, '').trim();
+      
+      const res = JSON.parse(raw);
+      render(res);
+    } catch(err) {
+      alert('Analysis Error: ' + err.message);
+      reset();
     } finally {
       setLoading(false);
     }
   }
 
-  // ── UI helpers ────────────────────────────────────────
   function setLoading(on) {
     document.getElementById('loading').style.display = on ? 'block' : 'none';
     document.getElementById('preview-area').style.display = on ? 'none' : 'block';
-    document.getElementById('analyze-btn').disabled = on;
   }
 
-  function showResult(r) {
-    document.getElementById('r-ripeness').textContent   = r.ripeness    || '-';
-    document.getElementById('r-brix').textContent       = r.brix_estimate || '-';
-    document.getElementById('r-confidence').textContent = r.confidence ? Math.round(r.confidence * 100) + '%' : '-';
-    document.getElementById('r-diagnosis').textContent  = r.diagnosis   || '-';
-    document.getElementById('r-care').textContent       = r.care_instruction || '-';
-
-    const alertCard = document.getElementById('alert-card');
-    if (r.alert && r.alert !== 'null' && r.alert !== null) {
-      document.getElementById('r-alert').textContent = r.alert;
-      alertCard.style.display = 'block';
+  function render(data) {
+    document.getElementById('res-diagnosis').textContent = data.diagnosis;
+    document.getElementById('res-ripeness').textContent = data.ripeness;
+    document.getElementById('res-brix').textContent = data.brix;
+    document.getElementById('res-conf').textContent = data.confidence;
+    document.getElementById('res-care').textContent = data.instruction;
+    
+    const warn = document.getElementById('alert-card');
+    if(data.warning && data.warning !== 'null') {
+      document.getElementById('res-alert').textContent = data.warning;
+      warn.style.display = 'block';
     } else {
-      alertCard.style.display = 'none';
+      warn.style.display = 'none';
     }
-
-    document.getElementById('preview-area').style.display = 'none';
-    document.getElementById('result-area').style.display  = 'block';
-  }
-
-  function showError(msg) {
-    const box = document.getElementById('error-box');
-    box.textContent = msg;
-    box.style.display = 'block';
-  }
-
-  function hideError() {
-    document.getElementById('error-box').style.display = 'none';
+    
+    document.getElementById('result-view').style.display = 'block';
   }
 
   function reset() {
-    currentBase64 = null;
-    document.getElementById('preview-img').src  = '';
-    document.getElementById('preview-area').style.display = 'none';
-    document.getElementById('result-area').style.display  = 'none';
+    currentB64 = null;
     document.getElementById('file-input').value = '';
-    hideError();
+    document.getElementById('idle-view').style.display = 'block';
+    document.getElementById('preview-area').style.display = 'none';
+    document.getElementById('result-view').style.display = 'none';
   }
 </script>
 </body>
