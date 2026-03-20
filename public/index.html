@@ -39,7 +39,6 @@
     header .logo { font-size: 1.3rem; font-weight: 700; }
     header .logo span { color: var(--accent); }
 
-    /* ── Config ── */
     .api-status { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
     .status-off { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
     .status-on { background: rgba(16, 185, 129, 0.1); color: #10b981; }
@@ -61,10 +60,8 @@
       padding: 0.5rem 1rem; font-weight: 700; cursor: pointer;
     }
 
-    /* ── Main ── */
     main { flex: 1; max-width: 800px; margin: 0 auto; padding: 2rem 1.5rem; width: 100%; }
 
-    /* ── Live View ── */
     .media-container {
       width: 100%; aspect-ratio: 4/3; border-radius: 2rem; overflow: hidden;
       background: #000; border: 1px solid var(--glass-border); 
@@ -86,7 +83,6 @@
     .btn-circle:hover { transform: scale(1.1); background: rgba(255,255,255,0.2); }
     .btn-circle.active { background: var(--accent); color: #fff; box-shadow: 0 0 20px var(--accent-glow); }
 
-    /* ── Results ── */
     #report-panel { display: none; animation: slideUp 0.5s ease-out; }
     @keyframes slideUp { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
 
@@ -99,7 +95,6 @@
     .card .title { font-size: 0.7rem; font-weight: 800; color: var(--accent); margin-bottom: 0.5rem; text-transform: uppercase; }
     .card .body { font-size: 0.95rem; line-height: 1.5; }
 
-    /* ── Logs / Error ── */
     #error-log {
       display: none; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2);
       border-radius: 0.75rem; padding: 1rem; color: #fca5a5; font-size: 0.8rem; margin-top: 1rem;
@@ -176,7 +171,7 @@
 </main>
 
 <script>
-  const KEY_NAME = 'berry_v2_key';
+  const KEY_NAME = 'berry_v3_key';
   let isCameraOn = false;
   let isLiveMode = false;
   let liveTimer = null;
@@ -261,7 +256,7 @@
   function runLiveCycle() {
     if(!isLiveMode) return;
     captureAndAnalyze();
-    liveTimer = setTimeout(runLiveCycle, 5000); // 5초마다 자동 분석
+    liveTimer = setTimeout(runLiveCycle, 6000); // 6초 인터벌
   }
 
   function handleFile(e) {
@@ -296,17 +291,21 @@
       contents: [{
         parts: [
           { inline_data: { mime_type: 'image/jpeg', data: b64 } },
-          { text: "Analyze this strawberry/crop image. Return strictly JSON: {diagnosis: '', ripeness: '', brix: '', confidence: '', instruction: ''}. Localize values in Korean." }
+          { text: "Analyze this strawberry/crop image. Return strictly JSON ONLY: {diagnosis: '', ripeness: '', brix: '', confidence: '', instruction: ''}. Localize values in Korean." }
         ]
       }]
     };
 
     try {
-      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${key}`, {
+      // v1 버전과 gemini-1.5-flash 모델 사용 (가장 안정적)
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${key}`, {
         method: 'POST', body: JSON.stringify(payload)
       });
       const data = await r.json();
-      if(data.error) throw new Error(data.error.message);
+      
+      if(data.error) {
+        throw new Error(`${data.error.message} (${data.error.status})`);
+      }
       
       let txt = data.candidates[0].content.parts[0].text;
       txt = txt.replace(/```json/g, '').replace(/```/g, '').trim();
@@ -320,7 +319,8 @@
       document.getElementById('r-inst').textContent = result.instruction;
       hideError();
     } catch(err) {
-      showError('Diagnosis Failed: ' + err.message);
+      showError('Diagnosis Error: ' + err.message);
+      console.error('API Error Details:', err);
     }
   }
 
