@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Berry Analyst AI | Multimodal AI Assistant</title>
+  <title>Berry Analyst AI | Real-time Multimodal Assistant</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet" />
   <style>
@@ -18,7 +18,6 @@
       --text-muted: #94a3b8;
     }
 
-    /* ── Base ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Outfit', 'Noto Sans KR', sans-serif;
@@ -28,465 +27,309 @@
         radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.05) 0px, transparent 50%);
       color: var(--text);
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      overflow-x: hidden;
+      display: flex; flex-direction: column; overflow-x: hidden;
     }
 
-    /* ── Header ── */
     header {
-      backdrop-filter: blur(12px);
-      background: rgba(15, 23, 42, 0.8);
-      border-bottom: 1px solid var(--glass-border);
-      padding: 1.5rem 2rem;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 0.75rem;
+      backdrop-filter: blur(12px); background: rgba(15, 23, 42, 0.8);
+      border-bottom: 1px solid var(--glass-border); padding: 1.2rem 2rem;
+      position: sticky; top: 0; z-index: 100;
+      display: flex; justify-content: space-between; align-items: center;
     }
-    header .logo {
-      font-size: 1.5rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-    }
-    header .logo span {
-      background: linear-gradient(135deg, #10b981, #34d399);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
+    header .logo { font-size: 1.3rem; font-weight: 700; }
+    header .logo span { color: var(--accent); }
 
-    /* ── API Configuration ── */
-    .config-tray {
-      max-width: 800px;
-      margin: 1.5rem auto 0;
-      padding: 0 1.5rem;
-      width: 100%;
-    }
+    /* ── Config ── */
+    .api-status { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
+    .status-off { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+    .status-on { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+
     .config-card {
-      background: var(--glass);
-      border: 1px solid var(--glass-border);
-      border-radius: 1rem;
-      padding: 1rem 1.25rem;
-      display: flex;
-      align-items: center;
-      gap: 1rem;
+      max-width: 800px; margin: 1.5rem auto 0; width: 100%; padding: 0 1.5rem;
     }
-    .config-card label {
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      white-space: nowrap;
+    .config-inner {
+      background: var(--glass); border: 1px solid var(--glass-border);
+      border-radius: 1rem; padding: 0.8rem 1rem;
+      display: flex; align-items: center; gap: 1rem;
     }
-    .config-card input {
-      flex: 1;
-      background: rgba(0,0,0,0.2);
-      border: 1px solid var(--glass-border);
-      border-radius: 0.75rem;
-      padding: 0.6rem 1rem;
-      color: var(--text);
-      font-family: inherit;
-      font-size: 0.9rem;
-      outline: none;
-      transition: border-color 0.2s;
+    .config-inner input {
+      flex: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border);
+      border-radius: 0.5rem; padding: 0.5rem 1rem; color: #fff; outline: none;
     }
-    .config-card input:focus { border-color: var(--accent); }
-    .config-card button {
-      background: #10b981;
-      color: white;
-      border: none;
-      border-radius: 0.75rem;
-      padding: 0.6rem 1.5rem;
-      font-weight: 600;
-      font-size: 0.9rem;
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .config-card button:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px var(--accent-glow);
+    .config-inner button {
+      background: var(--accent); color: #fff; border: none; border-radius: 0.5rem;
+      padding: 0.5rem 1rem; font-weight: 700; cursor: pointer;
     }
 
-    /* ── Main Area ── */
-    main {
-      flex: 1;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 3rem 1.5rem;
-      width: 100%;
+    /* ── Main ── */
+    main { flex: 1; max-width: 800px; margin: 0 auto; padding: 2rem 1.5rem; width: 100%; }
+
+    /* ── Live View ── */
+    .media-container {
+      width: 100%; aspect-ratio: 4/3; border-radius: 2rem; overflow: hidden;
+      background: #000; border: 1px solid var(--glass-border); 
+      position: relative; margin-bottom: 1.5rem;
+    }
+    #video-feed { width: 100%; height: 100%; object-fit: cover; }
+    #static-preview { width: 100%; height: 100%; object-fit: cover; display: none; }
+    #canvas-temp { display: none; }
+
+    .media-overlay {
+      position: absolute; bottom: 1.5rem; left: 0; width: 100%;
+      display: flex; justify-content: center; gap: 1rem;
+    }
+    .btn-circle {
+      width: 60px; height: 60px; border-radius: 50%; border: none;
+      display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
+      cursor: pointer; transition: all 0.2s; background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);
+    }
+    .btn-circle:hover { transform: scale(1.1); background: rgba(255,255,255,0.2); }
+    .btn-circle.active { background: var(--accent); color: #fff; box-shadow: 0 0 20px var(--accent-glow); }
+
+    /* ── Results ── */
+    #report-panel { display: none; animation: slideUp 0.5s ease-out; }
+    @keyframes slideUp { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
+
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-bottom: 1rem; }
+    .stat-box { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 1rem; padding: 1rem; text-align: center; }
+    .stat-box .val { font-size: 1.1rem; font-weight: 800; color: var(--accent); }
+    .stat-box .lab { font-size: 0.65rem; color: var(--text-muted); margin-top: 2px; }
+
+    .card { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 1.2rem; padding: 1.2rem; margin-bottom: 1rem; }
+    .card .title { font-size: 0.7rem; font-weight: 800; color: var(--accent); margin-bottom: 0.5rem; text-transform: uppercase; }
+    .card .body { font-size: 0.95rem; line-height: 1.5; }
+
+    /* ── Logs / Error ── */
+    #error-log {
+      display: none; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2);
+      border-radius: 0.75rem; padding: 1rem; color: #fca5a5; font-size: 0.8rem; margin-top: 1rem;
     }
 
-    /* ── Upload Area ── */
-    .hero-section {
-      text-align: center;
-      margin-bottom: 2rem;
+    #live-indicator {
+      position: absolute; top: 1.5rem; right: 1.5rem; background: rgba(239,68,68,0.8);
+      color: white; padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: 800;
+      animation: pulse 1s infinite; display: none;
     }
-    .hero-section h1 {
-      font-size: 2.5rem;
-      font-weight: 800;
-      margin-bottom: 0.75rem;
-      letter-spacing: -0.04em;
-    }
-    .hero-section p {
-      color: var(--text-muted);
-      font-size: 1.1rem;
-      max-width: 500px;
-      margin: 0 auto;
-      line-height: 1.6;
-    }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
-    .drop-zone {
-      position: relative;
-      margin-top: 2.5rem;
-      background: var(--glass);
-      border: 2px dashed var(--glass-border);
-      border-radius: 2rem;
-      padding: 4rem 2rem;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      cursor: pointer;
-    }
-    .drop-zone:hover {
-      border-color: var(--accent);
-      background: var(--glass-hover);
-      transform: scale(1.01);
-    }
-    .drop-zone.drag-over {
-      border-color: var(--accent);
-      background: var(--accent-glow);
-    }
-    .drop-zone input[type="file"] {
-      position: absolute; inset: 0; opacity: 0; cursor: pointer;
-    }
-    .drop-zone .icon-container {
-      font-size: 4rem;
-      margin-bottom: 1.5rem;
-      filter: drop-shadow(0 0 10px var(--accent-glow));
-    }
-    .drop-zone h3 { font-size: 1.25rem; margin-bottom: 0.5rem; }
-    .drop-zone p { color: var(--text-muted); font-size: 0.9rem; }
-
-    /* ── Loading ── */
-    #loading { display: none; margin: 3rem 0; text-align: center; }
-    .loader {
-      width: 48px; height: 48px;
-      border: 4px solid var(--glass-border);
-      border-left-color: var(--accent);
-      border-radius: 50%;
-      display: inline-block;
-      animation: rotation 1s linear infinite;
-      margin-bottom: 1rem;
-    }
+    .loader-inline { width: 14px; height: 14px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; display: none; animation: rotation 0.8s linear infinite; }
     @keyframes rotation { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
-    /* ── Result View ── */
-    #result-view { display: none; animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
-    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-    .result-img-container {
-      width: 100%;
-      aspect-ratio: 16/9;
-      object-fit: cover;
-      border-radius: 1.5rem;
-      overflow: hidden;
-      margin-bottom: 2rem;
-      border: 1px solid var(--glass-border);
-    }
-    .result-img-container img { width: 100%; height: 100%; object-fit: cover; }
-
-    .action-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1.5rem;
-    }
-    #retry-btn {
-      background: var(--glass);
-      color: var(--text-muted);
-      border: 1px solid var(--glass-border);
-      padding: 0.6rem 1.2rem;
-      border-radius: 0.75rem;
-      cursor: pointer;
-      font-weight: 600;
-      transition: all 0.2s;
-    }
-    #retry-btn:hover { background: var(--glass-hover); color: var(--text); }
-
-    .stats-container {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-    }
-    .stat-pill {
-      background: var(--glass);
-      border: 1px solid var(--glass-border);
-      border-radius: 1.25rem;
-      padding: 1.25rem;
-      text-align: center;
-    }
-    .stat-pill .icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
-    .stat-pill .val { font-size: 1.1rem; font-weight: 700; block-size: 1.5rem; }
-    .stat-pill .label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.25rem; }
-
-    .insight-card {
-      background: var(--glass);
-      border: 1px solid var(--glass-border);
-      border-radius: 1.5rem;
-      padding: 1.5rem;
-      margin-bottom: 1rem;
-    }
-    .insight-card .tag {
-      display: inline-block;
-      font-size: 0.65rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      padding: 0.25rem 0.6rem;
-      border-radius: 0.5rem;
-      margin-bottom: 0.75rem;
-    }
-    .insight-card .body { font-size: 1rem; line-height: 1.6; color: var(--text); }
-
-    .tag.diagnosis { background: rgba(16, 185, 129, 0.1); color: #10b981; }
-    .tag.care { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
-    .tag.alert { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
-
-    /* ── Utilities ── */
-    #preview-area { display: none; }
-    .analyze-btn {
-      width: 100%;
-      padding: 1.2rem;
-      background: linear-gradient(135deg, #10b981, #059669);
-      color: white;
-      border: none;
-      border-radius: 1.25rem;
-      font-size: 1.1rem;
-      font-weight: 700;
-      cursor: pointer;
-      margin-top: 1.5rem;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .analyze-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px var(--accent-glow); }
   </style>
 </head>
 <body>
 
 <header>
-  <span style="font-size:1.8rem;">🍓</span>
   <div class="logo">Berry<span>Analyst</span> AI</div>
+  <div id="api-badge" class="api-status status-off">Key Required</div>
 </header>
 
-<div class="config-tray">
-  <div class="config-card">
-    <label>Gemini API Key</label>
-    <input id="key-input" type="password" placeholder="AIzaSy..." />
-    <button onclick="saveKey()">Save Config</button>
+<div class="config-card">
+  <div class="config-inner">
+    <input id="key-input" type="password" placeholder="Input Gemini API Key (AIza...)" />
+    <button onclick="saveKey()">Connect</button>
   </div>
 </div>
 
 <main>
-  <!-- UI: Idle -->
-  <section id="idle-view">
-    <div class="hero-section">
-      <h1>The Future of <span>Berry Care</span>.</h1>
-      <p>Precision AI analysis for your crops. Instant growth diagnosis, Brix estimation, and health tracking in one click.</p>
-    </div>
-
-    <div class="drop-zone" id="drop-zone">
-      <input type="file" id="file-input" accept="image/*" onchange="handleFile(event)" />
-      <div class="icon-container">🌿</div>
-      <h3>Capture or Upload</h3>
-      <p>Drag and drop or click to analyze your crop</p>
-    </div>
-  </section>
-
-  <!-- UI: Preview -->
-  <section id="preview-area">
-    <div class="result-img-container">
-      <img id="preview-img" src="" alt="Crop Input" />
-    </div>
-    <button class="analyze-btn" id="analyze-btn" onclick="analyze()">Run AI Diagnosis</button>
-  </section>
-
-  <!-- UI: Loading -->
-  <section id="loading">
-    <span class="loader"></span>
-    <p style="color:var(--text-muted); font-weight:500;">AI Engine Processing Multimodal Data...</p>
-  </section>
-
-  <!-- UI: Result -->
-  <section id="result-view">
-    <div class="action-row">
-      <h2>Diagnosis Report</h2>
-      <button id="retry-btn" onclick="reset()">New Analysis</button>
-    </div>
+  <div class="media-container">
+    <video id="video-feed" autoplay playsinline muted></video>
+    <img id="static-preview" src="" alt="Snapshot" />
+    <canvas id="canvas-temp"></canvas>
     
-    <div class="result-img-container" style="aspect-ratio: 21/9;">
-      <img id="final-img" src="" />
+    <div id="live-indicator">LIVE ANALYSIS ACTIVE</div>
+    
+    <div class="media-overlay">
+      <button class="btn-circle" id="camera-btn" onclick="toggleCamera()" title="Toggle Camera">📸</button>
+      <button class="btn-circle" id="live-btn" onclick="toggleLiveAnalysis()" title="Gemini Live Analysis">🤖</button>
+      <button class="btn-circle" id="upload-btn" onclick="document.getElementById('file-input').click()" title="Upload Photo">📂</button>
+      <input type="file" id="file-input" accept="image/*" style="display:none" onchange="handleFile(event)" />
+    </div>
+  </div>
+
+  <div id="report-panel">
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="val" id="r-rip">-</div>
+        <div class="lab">RIPENESS</div>
+      </div>
+      <div class="stat-box">
+        <div class="val" id="r-brix">-</div>
+        <div class="lab">BRIX EST.</div>
+      </div>
+      <div class="stat-box">
+        <div class="val" id="r-conf">-</div>
+        <div class="lab">CONFIDENCE</div>
+      </div>
     </div>
 
-    <div class="stats-container">
-      <div class="stat-pill">
-        <div class="icon">📈</div>
-        <div class="val" id="res-ripeness">-</div>
-        <div class="label">Ripeness</div>
-      </div>
-      <div class="stat-pill">
-        <div class="icon">✨</div>
-        <div class="val" id="res-brix">-</div>
-        <div class="label">Brix Est.</div>
-      </div>
-      <div class="stat-pill">
-        <div class="icon">🔮</div>
-        <div class="val" id="res-conf">-</div>
-        <div class="label">Confidence</div>
-      </div>
+    <div class="card">
+      <div class="title">Diagnosis</div>
+      <div class="body" id="r-diag">Waiting for AI assessment...</div>
     </div>
+    <div class="card">
+      <div class="title">Instruction</div>
+      <div class="body" id="r-inst">-</div>
+    </div>
+  </div>
 
-    <div class="insight-card">
-      <span class="tag diagnosis">Diagnosis</span>
-      <div class="body" id="res-diagnosis">-</div>
-    </div>
-    <div class="insight-card">
-      <span class="tag care">Smart Instruction</span>
-      <div class="body" id="res-care">-</div>
-    </div>
-    <div class="insight-card" id="alert-card" style="display:none;">
-      <span class="tag alert">Security Warning</span>
-      <div class="body" id="res-alert">-</div>
-    </div>
-  </section>
+  <div id="error-log"></div>
 </main>
 
 <script>
-  const STORAGE_KEY = 'berry_analyst_v2_key';
+  const KEY_NAME = 'berry_v2_key';
+  let isCameraOn = false;
+  let isLiveMode = false;
+  let liveTimer = null;
 
   window.onload = () => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if(saved) document.getElementById('key-input').value = saved;
+    const key = localStorage.getItem(KEY_NAME);
+    if(key) {
+      document.getElementById('key-input').value = key;
+      updateBadge(true);
+    }
   };
 
   function saveKey() {
     const val = document.getElementById('key-input').value.trim();
-    if(!val) return alert('Input valid key.');
-    localStorage.setItem(STORAGE_KEY, val);
-    alert('Config secured.');
+    if(!val) return alert('Input your API key.');
+    localStorage.setItem(KEY_NAME, val);
+    updateBadge(true);
+    alert('Gemini Connected.');
   }
 
-  function getKey() {
-    return localStorage.getItem(STORAGE_KEY) || document.getElementById('key-input').value;
+  function updateBadge(v) {
+    const b = document.getElementById('api-badge');
+    b.className = v ? 'api-status status-on' : 'api-status status-off';
+    b.textContent = v ? 'Connected' : 'Key Required';
   }
 
-  let currentB64 = null;
-  let currentMime = 'image/jpeg';
+  async function toggleCamera() {
+    const video = document.getElementById('video-feed');
+    const preview = document.getElementById('static-preview');
+    const btn = document.getElementById('camera-btn');
+
+    if(!isCameraOn) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        video.srcObject = stream;
+        video.style.display = 'block';
+        preview.style.display = 'none';
+        isCameraOn = true;
+        btn.classList.add('active');
+        document.getElementById('report-panel').style.display = 'block';
+      } catch(e) {
+        showError('Camera Access Denied: ' + e.message);
+      }
+    } else {
+      stopCamera();
+    }
+  }
+
+  function stopCamera() {
+    const video = document.getElementById('video-feed');
+    if(video.srcObject) {
+      video.srcObject.getTracks().forEach(t => t.stop());
+      video.srcObject = null;
+    }
+    video.style.display = 'none';
+    isCameraOn = false;
+    document.getElementById('camera-btn').classList.remove('active');
+    if(isLiveMode) toggleLiveAnalysis();
+  }
+
+  function toggleLiveAnalysis() {
+    if(!isCameraOn) {
+      alert('Start camera first for Live analysis.');
+      return;
+    }
+    const btn = document.getElementById('live-btn');
+    const indicator = document.getElementById('live-indicator');
+    
+    if(!isLiveMode) {
+      isLiveMode = true;
+      btn.classList.add('active');
+      indicator.style.display = 'block';
+      runLiveCycle();
+    } else {
+      isLiveMode = false;
+      btn.classList.remove('active');
+      indicator.style.display = 'none';
+      if(liveTimer) clearTimeout(liveTimer);
+    }
+  }
+
+  function runLiveCycle() {
+    if(!isLiveMode) return;
+    captureAndAnalyze();
+    liveTimer = setTimeout(runLiveCycle, 5000); // 5초마다 자동 분석
+  }
 
   function handleFile(e) {
-    const file = e.target.files[0];
-    if(file) processFile(file);
-  }
-
-  function processFile(file) {
-    currentMime = file.type || 'image/jpeg';
+    const f = e.target.files[0];
+    if(!f) return;
     const reader = new FileReader();
     reader.onload = (ev) => {
-      document.getElementById('preview-img').src = ev.target.result;
-      document.getElementById('final-img').src = ev.target.result;
-      document.getElementById('idle-view').style.display = 'none';
-      document.getElementById('preview-area').style.display = 'block';
-      currentB64 = ev.target.result.split(',')[1];
+      stopCamera();
+      const p = document.getElementById('static-preview');
+      p.src = ev.target.result;
+      p.style.display = 'block';
+      captureAndAnalyze(ev.target.result.split(',')[1]);
     };
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(f);
   }
 
-  const dz = document.getElementById('drop-zone');
-  dz.ondragover = (e) => { e.preventDefault(); dz.classList.add('drag-over'); };
-  dz.ondragleave = () => dz.classList.remove('drag-over');
-  dz.ondrop = (e) => {
-    e.preventDefault();
-    dz.classList.remove('drag-over');
-    const f = e.dataTransfer.files[0];
-    if(f && f.type.startsWith('image/')) processFile(f);
-  };
+  async function captureAndAnalyze(manualB64 = null) {
+    const key = localStorage.getItem(KEY_NAME) || document.getElementById('key-input').value;
+    if(!key) { showError('API Key Missing.'); return; }
 
-  async function analyze() {
-    const key = getKey();
-    if(!key) return alert('Store API Key first.');
-
-    setLoading(true);
-
-    const prompt = `Act as an expert agronomist.
-Analyze the image of berries and crops.
-Output strictly JSON only (no markdown, no prefix):
-{
-  "diagnosis": "Summary in Korean",
-  "ripeness": "Growth Stage (KR)",
-  "brix": "Est Brix value",
-  "confidence": "Percent e.g. 95%",
-  "instruction": "Agronomy action in Korean",
-  "warning": "Health issues (KR) or null"
-}`;
+    let b64 = manualB64;
+    if(!b64) {
+      const video = document.getElementById('video-feed');
+      const canvas = document.getElementById('canvas-temp');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext('2d').drawImage(video, 0, 0);
+      b64 = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+    }
 
     const payload = {
       contents: [{
         parts: [
-          { inline_data: { mime_type: currentMime, data: currentB64 } },
-          { text: prompt }
+          { inline_data: { mime_type: 'image/jpeg', data: b64 } },
+          { text: "Analyze this strawberry/crop image. Return strictly JSON: {diagnosis: '', ripeness: '', brix: '', confidence: '', instruction: ''}. Localize values in Korean." }
         ]
       }]
     };
 
     try {
-      const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${key}`, {
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${key}`, {
         method: 'POST', body: JSON.stringify(payload)
       });
-      const data = await resp.json();
-      let raw = data.candidates[0].content.parts[0].text;
-      raw = raw.replace(/\`\`\`json/g, '').replace(/\`\`\`/g, '').trim();
+      const data = await r.json();
+      if(data.error) throw new Error(data.error.message);
       
-      const res = JSON.parse(raw);
-      render(res);
+      let txt = data.candidates[0].content.parts[0].text;
+      txt = txt.replace(/```json/g, '').replace(/```/g, '').trim();
+      const result = JSON.parse(txt);
+      
+      document.getElementById('report-panel').style.display = 'block';
+      document.getElementById('r-rip').textContent = result.ripeness;
+      document.getElementById('r-brix').textContent = result.brix;
+      document.getElementById('r-conf').textContent = result.confidence;
+      document.getElementById('r-diag').textContent = result.diagnosis;
+      document.getElementById('r-inst').textContent = result.instruction;
+      hideError();
     } catch(err) {
-      alert('Analysis Error: ' + err.message);
-      reset();
-    } finally {
-      setLoading(false);
+      showError('Diagnosis Failed: ' + err.message);
     }
   }
 
-  function setLoading(on) {
-    document.getElementById('loading').style.display = on ? 'block' : 'none';
-    document.getElementById('preview-area').style.display = on ? 'none' : 'block';
+  function showError(m) {
+    const e = document.getElementById('error-log');
+    e.textContent = m;
+    e.style.display = 'block';
   }
-
-  function render(data) {
-    document.getElementById('res-diagnosis').textContent = data.diagnosis;
-    document.getElementById('res-ripeness').textContent = data.ripeness;
-    document.getElementById('res-brix').textContent = data.brix;
-    document.getElementById('res-conf').textContent = data.confidence;
-    document.getElementById('res-care').textContent = data.instruction;
-    
-    const warn = document.getElementById('alert-card');
-    if(data.warning && data.warning !== 'null') {
-      document.getElementById('res-alert').textContent = data.warning;
-      warn.style.display = 'block';
-    } else {
-      warn.style.display = 'none';
-    }
-    
-    document.getElementById('result-view').style.display = 'block';
-  }
-
-  function reset() {
-    currentB64 = null;
-    document.getElementById('file-input').value = '';
-    document.getElementById('idle-view').style.display = 'block';
-    document.getElementById('preview-area').style.display = 'none';
-    document.getElementById('result-view').style.display = 'none';
-  }
+  function hideError() { document.getElementById('error-log').style.display = 'none'; }
 </script>
 </body>
 </html>
