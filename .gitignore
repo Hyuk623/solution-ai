@@ -1,13 +1,3 @@
-# Environments
 .env
-
-# Flutter/Dart/Pub
-.dart_tool/
-build/
-.packages
-.pub-cache/
-.pub/
-/build/
-
-# iOS
-.DS_Store
+node_modules/
+.firebase/

@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Berry Analyst AI - 딸기 생육 분석</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: #0b1120;
+      color: #f1f5f9;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 20px 24px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    header .logo { font-size: 22px; font-weight: 700; letter-spacing: 0.5px; }
+    header .logo span { color: #4ade80; }
+
+    /* ── API Key bar ── */
+    .api-bar {
+      background: rgba(255,255,255,0.04);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 10px 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .api-bar label { font-size: 12px; color: #94a3b8; white-space: nowrap; }
+    .api-bar input {
+      flex: 1;
+      min-width: 200px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px;
+      padding: 7px 12px;
+      color: #f1f5f9;
+      font-size: 13px;
+      outline: none;
+    }
+    .api-bar input:focus { border-color: #4ade80; }
+    .api-bar button {
+      padding: 7px 18px;
+      background: #16a34a;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .api-bar button:hover { background: #15803d; }
+
+    /* ── Main ── */
+    main { max-width: 760px; margin: 0 auto; padding: 40px 20px; }
+
+    /* ── Upload zone ── */
+    .upload-zone {
+      border: 2px dashed rgba(74,222,128,0.3);
+      border-radius: 20px;
+      background: rgba(74,222,128,0.03);
+      padding: 48px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .upload-zone:hover, .upload-zone.drag-over {
+      border-color: #4ade80;
+      background: rgba(74,222,128,0.07);
+    }
+    .upload-zone input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .upload-icon { font-size: 56px; margin-bottom: 16px; }
+    .upload-zone h2 { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+    .upload-zone p { color: #64748b; font-size: 14px; }
+    .upload-zone .hint { margin-top: 20px; font-size: 12px; color: #475569; }
+
+    /* ── Preview ── */
+    #preview-area { margin-top: 24px; display: none; }
+    #preview-area img {
+      width: 100%;
+      max-height: 340px;
+      object-fit: cover;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    #analyze-btn {
+      margin-top: 16px;
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #16a34a, #15803d);
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.3px;
+      transition: opacity 0.2s;
+    }
+    #analyze-btn:hover { opacity: 0.88; }
+    #analyze-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── Loading ── */
+    #loading { display: none; text-align: center; padding: 48px 0; }
+    .spinner {
+      width: 52px; height: 52px;
+      border: 4px solid rgba(74,222,128,0.2);
+      border-top-color: #4ade80;
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+      margin: 0 auto 20px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Result ── */
+    #result-area { display: none; margin-top: 32px; }
+
+    .result-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .result-header h2 { font-size: 20px; font-weight: 700; }
+    #reset-btn {
+      padding: 8px 18px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: #94a3b8;
+      border-radius: 10px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    #reset-btn:hover { background: rgba(255,255,255,0.14); }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .stat-card {
+      background: #1e293b;
+      border-radius: 14px;
+      padding: 18px 12px;
+      text-align: center;
+    }
+    .stat-card .icon { font-size: 26px; margin-bottom: 8px; }
+    .stat-card .value { font-size: 16px; font-weight: 700; color: #f1f5f9; }
+    .stat-card .label { font-size: 11px; color: #64748b; margin-top: 4px; }
+
+    .info-card {
+      background: #1e293b;
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 12px;
+      border-left: 3px solid #4ade80;
+    }
+    .info-card.warn { border-left-color: #f87171; }
+    .info-card.tip  { border-left-color: #fb923c; }
+    .info-card .card-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #4ade80;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 8px;
+    }
+    .info-card.warn .card-title { color: #f87171; }
+    .info-card.tip  .card-title { color: #fb923c; }
+    .info-card .card-body { font-size: 15px; line-height: 1.6; color: #cbd5e1; }
+
+    /* ── Error ── */
+    .error-box {
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 12px;
+      padding: 16px 20px;
+      color: #fca5a5;
+      font-size: 14px;
+      margin-top: 16px;
+      display: none;
+    }
+
+    @media (max-width: 480px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <span style="font-size:28px;">🍓</span>
+  <div class="logo">Berry <span>Analyst</span> AI</div>
+</header>
+
+<div class="api-bar">
+  <label>Gemini API Key</label>
+  <input id="api-key-input" type="password" placeholder="AIza..." />
+  <button onclick="saveKey()">저장</button>
+</div>
+
+<main>
+  <!-- Upload -->
+  <div class="upload-zone" id="upload-zone">
+    <input type="file" id="file-input" accept="image/*" onchange="handleFile(event)" />
+    <div class="upload-icon">📷</div>
+    <h2>딸기 사진을 업로드하세요</h2>
+    <p>클릭하거나 사진을 끌어다 놓으세요</p>
+    <p class="hint">갤러리 선택 또는 카메라 촬영 모두 가능합니다</p>
+  </div>
+
+  <!-- Preview -->
+  <div id="preview-area">
+    <img id="preview-img" src="" alt="업로드된 이미지" />
+    <button id="analyze-btn" onclick="analyze()">AI로 생육 분석하기</button>
+  </div>
+
+  <!-- Loading -->
+  <div id="loading">
+    <div class="spinner"></div>
+    <p>AI가 딸기를 분석 중입니다...</p>
+  </div>
+
+  <!-- Error -->
+  <div class="error-box" id="error-box"></div>
+
+  <!-- Result -->
+  <div id="result-area">
+    <div class="result-header">
+      <h2>분석 결과</h2>
+      <button id="reset-btn" onclick="reset()">다시 분석</button>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="icon">🌱</div>
+        <div class="value" id="r-ripeness">-</div>
+        <div class="label">성숙도</div>
+      </div>
+      <div class="stat-card">
+        <div class="icon">💧</div>
+        <div class="value" id="r-brix">-</div>
+        <div class="label">예측 당도</div>
+      </div>
+      <div class="stat-card">
+        <div class="icon">✅</div>
+        <div class="value" id="r-confidence">-</div>
+        <div class="label">신뢰도</div>
+      </div>
+    </div>
+
+    <div class="info-card">
+      <div class="card-title">생육 상태 진단</div>
+      <div class="card-body" id="r-diagnosis">-</div>
+    </div>
+
+    <div class="info-card tip">
+      <div class="card-title">권장 조치</div>
+      <div class="card-body" id="r-care">-</div>
+    </div>
+
+    <div class="info-card warn" id="alert-card" style="display:none;">
+      <div class="card-title">주의</div>
+      <div class="card-body" id="r-alert">-</div>
+    </div>
+  </div>
+</main>
+
+<script>
+  // ── API Key ──────────────────────────────────────────
+  const KEY_STORAGE = 'berry_gemini_key';
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const saved = localStorage.getItem(KEY_STORAGE);
+    if (saved) document.getElementById('api-key-input').value = saved;
+  });
+
+  function saveKey() {
+    const key = document.getElementById('api-key-input').value.trim();
+    if (!key) return alert('API 키를 입력해주세요.');
+    localStorage.setItem(KEY_STORAGE, key);
+    alert('API 키가 저장되었습니다.');
+  }
+
+  function getKey() {
+    return localStorage.getItem(KEY_STORAGE) || document.getElementById('api-key-input').value.trim();
+  }
+
+  // ── File Handling ─────────────────────────────────────
+  let currentBase64 = null;
+  let currentMime   = 'image/jpeg';
+
+  function handleFile(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    loadFile(file);
+  }
+
+  function loadFile(file) {
+    currentMime = file.type || 'image/jpeg';
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      // Preview
+      document.getElementById('preview-img').src = e.target.result;
+      document.getElementById('preview-area').style.display = 'block';
+      document.getElementById('result-area').style.display = 'none';
+      document.getElementById('error-box').style.display   = 'none';
+
+      // Base64 (strip header)
+      currentBase64 = e.target.result.split(',')[1];
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // drag & drop
+  const zone = document.getElementById('upload-zone');
+  zone.addEventListener('dragover',  (e) => { e.preventDefault(); zone.classList.add('drag-over'); });
+  zone.addEventListener('dragleave', ()  => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop',      (e) => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) loadFile(file);
+  });
+
+  // ── Analyze ───────────────────────────────────────────
+  async function analyze() {
+    const apiKey = getKey();
+    if (!apiKey) { showError('먼저 Gemini API 키를 입력하고 저장해주세요.'); return; }
+    if (!currentBase64) { showError('이미지를 먼저 업로드해주세요.'); return; }
+
+    setLoading(true);
+    hideError();
+
+    const prompt = `You are an expert strawberry analyst.
+Analyze this strawberry image carefully and return ONLY a valid JSON object (no markdown, no explanation) in exactly this format:
+{
+  "diagnosis": "Brief assessment in Korean (1-2 sentences)",
+  "ripeness": "미성숙/성숙중/완숙/과숙 (one of these)",
+  "brix_estimate": "e.g. 10-12 Brix",
+  "confidence": 0.90,
+  "care_instruction": "Main recommended action in Korean",
+  "alert": "Disease/pest info in Korean, or null"
+}`;
+
+    const body = {
+      contents: [{
+        parts: [
+          { inline_data: { mime_type: currentMime, data: currentBase64 } },
+          { text: prompt }
+        ]
+      }]
+    };
+
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        }
+      );
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error?.message || `HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      let text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+      // strip possible markdown fences
+      text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+
+      const result = JSON.parse(text);
+      showResult(result);
+    } catch (e) {
+      showError('분석 실패: ' + e.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // ── UI helpers ────────────────────────────────────────
+  function setLoading(on) {
+    document.getElementById('loading').style.display = on ? 'block' : 'none';
+    document.getElementById('preview-area').style.display = on ? 'none' : 'block';
+    document.getElementById('analyze-btn').disabled = on;
+  }
+
+  function showResult(r) {
+    document.getElementById('r-ripeness').textContent   = r.ripeness    || '-';
+    document.getElementById('r-brix').textContent       = r.brix_estimate || '-';
+    document.getElementById('r-confidence').textContent = r.confidence ? Math.round(r.confidence * 100) + '%' : '-';
+    document.getElementById('r-diagnosis').textContent  = r.diagnosis   || '-';
+    document.getElementById('r-care').textContent       = r.care_instruction || '-';
+
+    const alertCard = document.getElementById('alert-card');
+    if (r.alert && r.alert !== 'null' && r.alert !== null) {
+      document.getElementById('r-alert').textContent = r.alert;
+      alertCard.style.display = 'block';
+    } else {
+      alertCard.style.display = 'none';
+    }
+
+    document.getElementById('preview-area').style.display = 'none';
+    document.getElementById('result-area').style.display  = 'block';
+  }
+
+  function showError(msg) {
+    const box = document.getElementById('error-box');
+    box.textContent = msg;
+    box.style.display = 'block';
+  }
+
+  function hideError() {
+    document.getElementById('error-box').style.display = 'none';
+  }
+
+  function reset() {
+    currentBase64 = null;
+    document.getElementById('preview-img').src  = '';
+    document.getElementById('preview-area').style.display = 'none';
+    document.getElementById('result-area').style.display  = 'none';
+    document.getElementById('file-input').value = '';
+    hideError();
+  }
+</script>
+</body>
+</html>
